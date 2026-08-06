@@ -1,11 +1,12 @@
 import os
-import streamlit as st
 import tempfile
-from doc_qa.rag_engine import process_pdfs, load_existing_vectorstore, answer_query
+
+import streamlit as st
+
+from doc_qa.rag_engine import answer_query, load_existing_vectorstore, process_pdfs
 
 st.set_page_config(
     page_title="AI Document Q&A RAG System",
-    page_icon="📚",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -65,7 +66,7 @@ with st.sidebar:
         model_name = ollama_model
 
     st.divider()
-    st.subheader("📁 Document Management")
+    st.subheader("Document Management")
     
     # Sample docs loading button
     if st.button("Load Sample PDFs (2 docs)", help="Quickly load pre-built sample PDFs (Company Policy & Project Spec)"):
@@ -77,7 +78,7 @@ with st.sidebar:
         if valid_samples:
             with st.spinner("Processing sample PDF documents..."):
                 try:
-                    st.session_state.vectorstore = process_pdfs(valid_samples)
+                    st.session_state.vectorstore = process_pdfs(valid_samples, ollama_url=ollama_url)
                     st.success(f"Successfully loaded {len(valid_samples)} sample documents!")
                 except Exception as e:
                     st.error(f"Error processing sample documents: {e}")
@@ -104,7 +105,7 @@ with st.sidebar:
                                 tmp.write(uploaded_file.getvalue())
                                 temp_paths.append(tmp.name)
                         
-                        st.session_state.vectorstore = process_pdfs(temp_paths)
+                        st.session_state.vectorstore = process_pdfs(temp_paths, ollama_url=ollama_url)
                         st.success(f"Successfully processed and indexed {len(uploaded_files)} PDF document(s)!")
                     except Exception as e:
                         st.error(f"Error processing PDFs: {e}")
@@ -124,14 +125,14 @@ with st.sidebar:
         st.rerun()
 
 # Main Interface
-st.markdown('<div class="main-header">📚 Document Q&A Assistant</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">Document Q&A Assistant</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-header">Ask natural language questions about your PDF documents with precise citations and source traceability.</div>', unsafe_allow_html=True)
 
 # Display architecture info expander
-with st.expander("ℹ️ About this RAG Pipeline & Architecture"):
+with st.expander("About this RAG Pipeline & Architecture"):
     st.markdown("""
     - **Document Ingestion**: Loads PDFs using `PyPDFLoader`, splits text into chunks using `RecursiveCharacterTextSplitter` (chunk size 1000, overlap 200).
-    - **Embeddings & Vector Store**: Uses `sentence-transformers` (`all-MiniLM-L6-v2`) for local embedding generation and `Chroma` for vector storage and similarity search.
+    - **Embeddings & Vector Store**: Uses Ollama local embeddings (`nomic-embed-text`) for local embedding generation and `Chroma` for vector storage and similarity search.
     - **LLM Support**: Supports local **Ollama (Gemma model)** with automatic fallback to cloud **Google Gemini API** when configured.
     - **Citations**: Returns explicit source document filenames and page numbers for every claim, backed by source chunk inspection.
     """)
@@ -140,8 +141,8 @@ with st.expander("ℹ️ About this RAG Pipeline & Architecture"):
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-        if "sources" in message and message["sources"]:
-            with st.expander(f"📌 View Retrieved Citations & Sources ({len(message['sources'])} chunks)"):
+        if message.get("sources"):
+            with st.expander(f"View Retrieved Citations & Sources ({len(message['sources'])} chunks)"):
                 for src in message["sources"]:
                     st.markdown(f"""
                     <div class="citation-box">
@@ -175,7 +176,7 @@ if prompt := st.chat_input("Ask a question about your documents..."):
                 )
                 st.markdown(answer)
                 if sources:
-                    with st.expander(f"📌 View Retrieved Citations & Sources ({len(sources)} chunks)"):
+                    with st.expander(f"View Retrieved Citations & Sources ({len(sources)} chunks)"):
                         for src in sources:
                             st.markdown(f"""
                             <div class="citation-box">

@@ -12,14 +12,13 @@ dependencies = [
     "langchain-community>=0.4.2",
     "langchain-core>=1.5.3",
     "langchain-google-genai>=4.3.2",
-    "langchain-huggingface>=1.2.2",
     "langchain-ollama>=1.1.0",
     "langchain-text-splitters>=1.1.2",
     "pypdf>=6.15.0",
     "python-dotenv>=1.2.2",
     "reportlab>=5.0.0",
-    "sentence-transformers>=2.2.2",
     "streamlit>=1.61.1",
+    "torchvision>=0.28.0",
 ]
 
 [project.scripts]
@@ -28,3 +27,26 @@ doc-qa-rag = "doc_qa_rag:main"
 [build-system]
 requires = ["uv_build>=0.12.2,<0.13.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "mypy>=2.3.0",
+    "pytest>=9.1.1",
+    "ruff>=0.16.1",
+]
+
+[tool.mypy]
+python_version = "3.13"
+mypy_path = "src"
+explicit_package_bases = true
+ignore_missing_imports = true
+check_untyped_defs = true
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "RUF"]
+ignore = ["BLE001", "E501"]
+

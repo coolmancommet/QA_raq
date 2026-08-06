@@ -1,21 +1,20 @@
 import os
-from typing import List, Tuple, Dict, Any
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_huggingface import HuggingFaceEmbeddings
+from typing import Any
+
 from langchain_chroma import Chroma
+from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_ollama import ChatOllama
 from langchain_google_genai import ChatGoogleGenerativeAI
-import tempfile
+from langchain_ollama import ChatOllama, OllamaEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 CHROMA_PERSIST_DIR = "./chroma_db"
-EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
+EMBEDDING_MODEL_NAME = "embeddinggemma:latest"
 
-def get_embeddings():
-    return HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
+def get_embeddings(ollama_url: str = "http://localhost:11434") -> OllamaEmbeddings:
+    return OllamaEmbeddings(model=EMBEDDING_MODEL_NAME, base_url=ollama_url)
 
-def process_pdfs(file_paths: List[str]) -> Chroma:
+def process_pdfs(file_paths: list[str], ollama_url: str = "http://localhost:11434") -> Chroma:
     """Load PDFs, split into chunks, and store in Chroma vector store."""
     all_docs = []
     for path in file_paths:
@@ -39,7 +38,7 @@ def process_pdfs(file_paths: List[str]) -> Chroma:
     )
     splits = text_splitter.split_documents(all_docs)
 
-    embeddings = get_embeddings()
+    embeddings = get_embeddings(ollama_url=ollama_url)
     # Create or replace Chroma vector store
     vectorstore = Chroma.from_documents(
         documents=splits,
@@ -48,14 +47,14 @@ def process_pdfs(file_paths: List[str]) -> Chroma:
     )
     return vectorstore
 
-def load_existing_vectorstore() -> Chroma:
+def load_existing_vectorstore(ollama_url: str = "http://localhost:11434") -> Chroma | None:
     """Load existing vector store if available."""
     if os.path.exists(CHROMA_PERSIST_DIR) and os.listdir(CHROMA_PERSIST_DIR):
-        embeddings = get_embeddings()
+        embeddings = get_embeddings(ollama_url=ollama_url)
         return Chroma(persist_directory=CHROMA_PERSIST_DIR, embedding_function=embeddings)
     return None
 
-def get_llm(provider: str, model_name: str, api_key: str = None, ollama_url: str = "http://localhost:11434"):
+def get_llm(provider: str, model_name: str, api_key: str | None = None, ollama_url: str = "http://localhost:11434"):
     """Initialize LLM based on provider with fallback mechanism."""
     
     if provider == "Ollama":
@@ -89,10 +88,10 @@ def answer_query(
     query: str,
     provider: str = "Auto (Ollama -> Gemini Fallback)",
     model_name: str = "gemma",
-    api_key: str = None,
+    api_key: str | None = None,
     ollama_url: str = "http://localhost:11434",
     k: int = 4
-) -> Tuple[str, List[Dict[str, Any]]]:
+) -> tuple[str, list[dict[str, Any]]]:
     """Retrieve relevant chunks and generate answer with citations."""
     if not vectorstore:
         return "No documents indexed yet. Please upload or load PDF documents first.", []

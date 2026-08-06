@@ -1,10 +1,10 @@
-# 📚 AI-Powered Document Q&A RAG System
+# AI-Powered Document Q&A RAG System
 
 A lightweight, robust Retrieval-Augmented Generation (RAG) system built with **Python**, **Streamlit**, **Chroma DB**, and **HuggingFace Embeddings**, supporting both local **Ollama (Gemma)** and cloud **Google Gemini API** with automatic fallback.
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
 1. **PDF Ingestion**: Accepts 1-3 PDF documents (with sample documents included for instant testing).
 2. **Natural Language Q&A**: Ask complex questions about your documents through an intuitive Streamlit chat interface.
@@ -14,7 +14,7 @@ A lightweight, robust Retrieval-Augmented Generation (RAG) system built with **P
 
 ---
 
-## 🏗️ Architecture & Approach
+## Architecture & Approach
 
 - **Data Ingestion & Chunking**: PDFs are loaded using `PyPDFLoader` and split into overlapping chunks (1000 chars, 200 overlap) via `RecursiveCharacterTextSplitter` to preserve semantic context across chunk boundaries.
 - **Embeddings & Vector Store**: Chunks are embedded locally into 384-dimensional vectors using `sentence-transformers` (`all-MiniLM-L6-v2`) and indexed in **Chroma DB** for lightning-fast semantic similarity search.
@@ -23,7 +23,7 @@ A lightweight, robust Retrieval-Augmented Generation (RAG) system built with **P
 
 ---
 
-## 🚀 Quick Start (Single-Command Run)
+## Quick Start (Single-Command Run)
 
 ### Prerequisites
 - Python 3.10+
@@ -46,7 +46,7 @@ The Streamlit app will open in your browser at `http://localhost:8501`.
 
 ---
 
-## ⚙️ Configuration (`.env`)
+## Configuration (`.env`)
 
 Copy `.env.example` to `.env` and configure your API keys (optional if running locally with Ollama):
 
@@ -58,7 +58,7 @@ OLLAMA_MODEL=gemma
 
 ---
 
-## 🔍 Known Limitations
+## Known Limitations
 
 1. **OCR Support**: Scanned PDFs (images without text layers) are not automatically OCR'd; text must be extractable by `pypdf`.
 2. **Context Window Limits**: While top-$k$ chunking prevents context overflow, extremely dense multi-document synthesis may occasionally truncate niche details if too many chunks are retrieved.
@@ -66,7 +66,7 @@ OLLAMA_MODEL=gemma
 
 ---
 
-## 📈 Future Improvements (With More Time)
+## Future Improvements (With More Time)
 
 1. **Hybrid Search**: Combine dense vector similarity search with sparse keyword search (BM25) using reciprocal rank fusion (RRF).
 2. **Advanced Document Parsing**: Integrate OCR (`pdf2image` + Tesseract) for scanned/handwritten documents and layout-aware table extraction.
